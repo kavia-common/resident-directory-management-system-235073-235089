@@ -2,15 +2,17 @@
 
 import React, { useMemo, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginClient() {
-  const { signIn, error, isLoading, user } = useAuth();
+export default function SignupClient() {
+  const { signUp, error, isLoading, user } = useAuth();
   const router = useRouter();
   const search = useSearchParams();
 
   const nextPath = useMemo(() => search.get("next") || "/", [search]);
 
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -35,7 +37,11 @@ export default function LoginClient() {
     }
 
     try {
-      await signIn(email.trim(), password);
+      await signUp({
+        email: email.trim(),
+        password,
+        displayName: displayName.trim() || undefined,
+      });
       router.replace(nextPath);
     } catch {
       // error is surfaced via provider
@@ -43,20 +49,28 @@ export default function LoginClient() {
   }
 
   return (
-    <section className="retro-card" aria-label="Login">
-      <div className="retro-card-title">Login</div>
+    <section className="retro-card" aria-label="Sign up">
+      <div className="retro-card-title">Sign up</div>
       <p className="retro-muted">
-        Sign in to view the resident directory. Admin users will see additional tools.
-      </p>
-      <p className="retro-muted" style={{ marginTop: 8 }}>
-        New here?{" "}
-        <a className="retro-link" href={`/signup?next=${encodeURIComponent(nextPath)}`}>
-          Create an account
-        </a>
+        Create an account to view the resident directory.
       </p>
 
       <form onSubmit={onSubmit} className="retro-main" style={{ marginTop: 12 }}>
         <div className="retro-grid-2">
+          <div className="retro-field">
+            <label className="retro-label" htmlFor="displayName">
+              Display name (optional)
+            </label>
+            <input
+              id="displayName"
+              className="retro-input"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              autoComplete="name"
+              placeholder="Alex"
+            />
+          </div>
+
           <div className="retro-field">
             <label className="retro-label" htmlFor="email">
               Email
@@ -82,7 +96,7 @@ export default function LoginClient() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               placeholder="••••"
             />
           </div>
@@ -99,15 +113,19 @@ export default function LoginClient() {
               Problem
             </div>
             <p>{localError || error}</p>
-            <p className="retro-muted" style={{ marginTop: 6 }}>
-              Note: backend auth endpoints must exist (e.g., /auth/login and /auth/me).
-            </p>
           </div>
         )}
 
         <button className="retro-btn retro-btn-primary" type="submit" disabled={isLoading}>
-          {isLoading ? "Signing in…" : "Sign in"}
+          {isLoading ? "Creating account…" : "Create account"}
         </button>
+
+        <p className="retro-muted" style={{ marginTop: 10 }}>
+          Already have an account?{" "}
+          <Link className="retro-link" href={`/login?next=${encodeURIComponent(nextPath)}`}>
+            Sign in
+          </Link>
+        </p>
       </form>
     </section>
   );

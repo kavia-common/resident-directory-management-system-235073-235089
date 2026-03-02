@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getMe, login, type Session, type SessionUser } from "@/lib/api";
+import { getMe, login, signup, type Session, type SessionUser } from "@/lib/api";
 
 type AuthContextValue = {
   session: Session | null;
@@ -9,6 +9,7 @@ type AuthContextValue = {
   isLoading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (params: { email: string; password: string; displayName?: string }) => Promise<void>;
   signOut: () => void;
 };
 
@@ -102,6 +103,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const signUp = useCallback(
+    async (params: { email: string; password: string; displayName?: string }) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const newSession = await signup(params);
+        setSession(newSession);
+        setUser(newSession.user);
+        writeStoredSession(newSession);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "Sign up failed.";
+        setError(msg);
+        setSession(null);
+        setUser(null);
+        writeStoredSession(null);
+        throw e;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
   const signOut = useCallback(() => {
     setSession(null);
     setUser(null);
@@ -116,9 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isLoading,
       error,
       signIn,
+      signUp,
       signOut,
     }),
-    [session, user, isLoading, error, signIn, signOut]
+    [session, user, isLoading, error, signIn, signUp, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
