@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/components/AuthProvider";
+import { AppHeader } from "@/components/AppHeader";
 
 export const metadata: Metadata = {
-  title: "Minimal Next.js App",
-  description: "Ultra-minimal Next.js application",
+  title: "Resident Directory",
+  description: "Retro-themed resident directory with privacy-aware profiles and admin tools.",
 };
 
 export default function RootLayout({
@@ -13,8 +15,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        {children}
+      <body className="retro-scanlines" suppressHydrationWarning>
+        <AuthProvider>
+          <div className="retro-container">
+            <AppHeader />
+            <main className="retro-main">{children}</main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
